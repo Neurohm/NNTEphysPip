@@ -7,37 +7,18 @@ read_Intan_RHD2000_file
 % t_amplifier = t_amplifier(1:100000);
 % amplifier_data_sorted = channelSortEdge(amplifier_data);
 % amplifier_data = amplifier_data_sorted;
-amplifier_data = flip(amplifier_data,1);
+% amplifier_data = flip(amplifier_data,1);
 %% Data Processing
 % set(0,'DefaultFigureWindowStyle','docked')
-filtData = preprocess_filtering(amplifier_data,t_amplifier);
+filtData = preprocess_filtering(amplifier_data(33:96,:),t_amplifier);
 Spikes = spikeSorting(filtData);
 Ripples = rippleDetection(filtData);
-Ripples = rippleAnalysis(filtData,Ripples,Spikes);
-%%
-PeriStimt = sum(Ripples.rippleOnset.PeriStim,3);
-[vectorized,~] = cosine_similarity(PeriStimt(:,1:5000),50);
-correlation = abs(corr(vectorized));
-correlation(isnan(correlation)) = 0;
-%%
-% data = filtData.lowpassData';
-% spacing = 2E-5;
-% [CSDoutput]  = CSD(data,20000,spacing,'inverse',spacing*5);
-%% Kilsort File prep
-datI = int16(amplifier_data);
-kilosortOut = uigetdir();
-[SUCCESS,~,~] = mkdir(kilosortOut,filename(1:end-4));
-newDIR = dir(strcat(kilosortOut,'\',filename(1:end-4)));
-newDIR = newDIR.folder;
-fid = fopen(strcat(newDIR,'\',filename(1:end-4)),'.bin','w');
-fwrite(fid,datI,'int16');
-fclose(fid);
-
+Ripples = rippleAnalysis(filtData,Ripples);
 %% Plots
 addpath(genpath('Figures'));
 disp('Plotting...')
 figure,spikePlot = Show_Spikes(Spikes.binary);
-figure('Name', 'Unfiltered Data'),stack_plot(amplifier_data);
+figure('Name', 'Unfiltered Data'),stack_plot(amplifier_data(32:97,:));
 set(gcf,'PaperUnits','inches','PaperPosition',[0 0 4 3]);...
     print(gcf,'-painters','-depsc', 'Figures/Raw_data.eps', '-r250');
 figure('Name','Singe Unit Waveforms'),SingleUnits(Spikes.allSpikes);

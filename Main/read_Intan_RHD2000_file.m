@@ -1,4 +1,4 @@
-function Intan = read_Intan_RHD2000_file
+function Intan = read_Intan_RHD2000_file(path,file)
 
 % read_Intan_RHD2000_file
 %
@@ -16,12 +16,9 @@ function Intan = read_Intan_RHD2000_file
 % >> whos
 % >> amplifier_channels(1)
 % >> plot(t_amplifier, amplifier_data(1,:))
-
-[file, path, filterindex] = ...
-    uigetfile('*.rhd', 'Select an RHD2000 Data File', 'MultiSelect', 'off');
-
-if (file == 0)
-    return;
+if nargin<2 || strcmp(file,'') || strcmp(path,'')
+    [file, path, filterindex] = ...
+        uigetfile('*.rhd', 'Select an RHD2000 Data File', 'MultiSelect', 'off');
 end
 
 % Read most recent file automatically.
@@ -29,8 +26,9 @@ end
 % d = dir([path '*.rhd']);
 % file = d(end).name;
 
+filename = fullfile(path,file);
+
 tic;
-filename = [path,file];
 fid = fopen(filename, 'r');
 
 s = dir(filename);
@@ -71,12 +69,13 @@ desired_upper_bandwidth = fread(fid, 1, 'single');
 
 % This tells us if a software 50/60 Hz notch filter was enabled during
 % the data acquisition.
-notch_filter_mode = fread(fid, 1, 'int16');
+notch_filter_mode = fread(fid, 1, 'int16'); % Uncomment to check notch
+% filter status
 notch_filter_frequency = 0;
 if (notch_filter_mode == 1)
     notch_filter_frequency = 50;
 elseif (notch_filter_mode == 2)
-    notch_filter_frequency = 60;
+    notch_filter_frequency = 0;
 end
 
 desired_impedance_test_frequency = fread(fid, 1, 'single');
@@ -531,9 +530,6 @@ Intan.aux_input_channels = aux_input_channels;
 Intan.aux_input_data = aux_input_data;
 Intan.board_dig_in_channels = board_dig_in_channels;
 Intan.board_dig_in_data = board_dig_in_data;
-
-clear amplifier_data t_amplifier frequncy_parameters notes aux_input_channels...
-    aux_input_data board_dig_in_channels board_dig_in_data
 
 fprintf(1, 'Done!  Elapsed time: %0.1f seconds\n', toc);
 if (data_present)
